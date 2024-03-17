@@ -4,6 +4,7 @@ from langchain.agents import AgentType, Tool, initialize_agent
 import time
 from flask import Flask, request, jsonify
 from tools.TeamTrends import TeamTrends
+from tools.PlayerSeasonStats import PlayerSeasonStats
 import dotenv
 import os
 dotenv.load_dotenv()
@@ -18,12 +19,13 @@ def chat():
     start = time.time()
     question = request.args.get('question')
     TeamTrendsTool = TeamTrends()
+    PlayerSeasonStatsTool = PlayerSeasonStats()
     turbo_llm = ChatOpenAI(
         temperature=0,
         model_name='gpt-4',
         openai_api_key=open_ai_key
     )
-    tools = [TeamTrendsTool]
+    tools = [TeamTrendsTool, PlayerSeasonStatsTool]
     conversational_agent = initialize_agent(
         tools=tools,
         agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,

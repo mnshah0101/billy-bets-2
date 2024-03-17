@@ -9,8 +9,9 @@ from typing import Type
 import dotenv
 import os
 from langchain.agents import AgentType
+from dotenv import load_dotenv
 
-dotenv.load_dotenv()
+load_dotenv()
 open_ai_key = os.getenv("OPENAI_API_KEY")
 sports_data_key = os.getenv("SPORTS_DATA_IO_API_KEY")
 
@@ -42,8 +43,10 @@ class TeamTrends(BaseTool):
         URL = f"https://api.sportsdata.io/v3/cbb/odds/json/TeamTrends/{team_abbr}"
         data = requests.get(
             URL, headers={'Ocp-Apim-Subscription-Key': sports_data_key})
+        print(data)
+        
         df = pd.DataFrame(data.json()['TeamGameTrends'])
-
+        
         df_agent = create_pandas_dataframe_agent(
             ChatOpenAI(temperature=0, model="gpt-4",
                        openai_api_key=open_ai_key),
