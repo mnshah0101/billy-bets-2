@@ -32,6 +32,7 @@ class TeamTrends(BaseTool):
 
     def _run(
             self, param_string: str) -> pd.DataFrame:
+        print(param_string)
         # get the abbreviated
         team = param_string.split("team_abbr: ")[
             1].replace("'", "").replace('""', '')

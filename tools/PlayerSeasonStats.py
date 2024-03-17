@@ -29,8 +29,8 @@ class PlayerSeasonStats(BaseTool):
     def _run(
             self, param_string: str) -> pd.DataFrame:
         # get the abbreviated
-        season = param_string.split("season: ")[
-            1].replace("'", "").replace('""', '')
+        print(param_string)
+        season= param_string.split("season: ")[1].split()[0]
         question = param_string.split("question:")[1]
       
         URL = f"https://api.sportsdata.io/v3/nba/stats/json/PlayerSeasonStats/{season}"
