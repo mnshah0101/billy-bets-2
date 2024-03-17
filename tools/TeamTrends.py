@@ -3,7 +3,7 @@ from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe
 import pandas as pd
 from langchain.tools import BaseTool
 from langchain.pydantic_v1 import BaseModel, Field
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 import requests
 from typing import Type
 import dotenv
@@ -21,16 +21,18 @@ with open('./jsons/team_abbr.json') as f:
 
 class TeamTrendsInput(BaseModel):
     param_string: str = Field(
-        description="""A formatted string of the original question and team name, for example: 'question: How did Duke do against the spread this last season? : team_abbr: Duke' """)
+        description="A formatted string with the original question and team name, for example: 'question: How did Duke do against the spread this last season? : team_abbr: Duke")
 
 
 class TeamTrends(BaseTool):
     name = "TeamTrends"
-    description = """Describes recent team trends and performance against betting data in recent sets of games for college basketball teams. Useful for answering questions about how teams performed against the spread and how teams performed in general in the last 3, 5, or 10 games. The input is formatted string of the original question and team name, for example: 'question: How did Duke do against the spread this last season? : team_abbr: Duke'"""
+    description = "Describes recent team trends and performance against betting data in recent sets of games for college basketball teams. Useful for answering questions about how teams performed against the spread and how teams performed in general in the last 3, 5, or 10 games. The input is formatted string of the original question and team name for example: 'question: How did Duke do against the spread this last season? : team_abbr: Duke "
     args_schema: Type[BaseModel] = TeamTrendsInput
 
     def _run(
             self, param_string: str) -> pd.DataFrame:
+
+        print("TeamTrends tool running")
         # get the abbreviated
         team = param_string.split("team_abbr: ")[
             1].replace("'", "").replace('""', '')
@@ -52,7 +54,7 @@ class TeamTrends(BaseTool):
             agent_type=AgentType.OPENAI_FUNCTIONS,
             openai_api_key=open_ai_key
         )
-        question_agent = question + " The dataframe given is a dataframe of a teams trends within a given scope of last 3, 5 or 10 games versus the spread. Default to scope of the last 10 games."
+        question_agent = question + " The DataFrame given is a DataFrame of a teams trends within a given scope of last 3, 5 or 10 games versus the spread. Default to scope of the last 10 games."
 
         response = df_agent.run(question_agent)
 
