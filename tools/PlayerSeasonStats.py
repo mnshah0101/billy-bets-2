@@ -30,10 +30,11 @@ class PlayerSeasonStats(BaseTool):
             self, param_string: str) -> pd.DataFrame:
         # get the abbreviated
         print(param_string)
-        season= param_string.split("season: ")[1].split()[0]
+        season = param_string.split("season: ")[
+            1].replace("'", "").replace('""', '')
         question = param_string.split("question:")[1]
       
-        URL = f"https://api.sportsdata.io/v3/nba/stats/json/PlayerSeasonStats/{season}"
+        URL = f"https://api.sportsdata.io/v3/cbb/stats/json/PlayerSeasonStats/{season}"
         data = requests.get(
             URL, headers={'Ocp-Apim-Subscription-Key': sports_data_key})
         df = pd.DataFrame(data.json())
