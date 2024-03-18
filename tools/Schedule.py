@@ -9,48 +9,55 @@ from typing import Type
 import dotenv
 import os
 from langchain.agents import AgentType
+import re
 
 
 dotenv.load_dotenv()
 open_ai_key = os.getenv("OPENAI_API_KEY")
 sports_data_key = os.getenv("SPORTS_DATA_IO_API_KEY")
 
+with open('./jsons/team_id.json') as f:
+    team_ids = json.load(f)
+
+
 
 class ScheduleInput(BaseModel):
     season: str = Field(
-        description="""A formatted string of the original question and season, for example: 'question: What is Duke and North Carolina's Head to head record over the last 5 games? : season: 2023' """)
+        description="""A formatted string of the original question and season, for example: 'question: What is Duke's record against the ACC last season? : season: 2023, team_name : Duke Blue Devils, conference: ACC' """)
 
 
 class Schedule(BaseTool):
     name = "Schedule"
-    description = """Describes the schedule of games for a given season. Useful for finding team records against a specific conference, or home and away records. The input is a formatted string of the original question and season, for example: 'question: How did Duke do against the ACC last season? : season: 2023' The current season is 2024.'"""
+    description = """Describes the schedule of games for a given season. Useful for finding team records against a specific conference (for example, what is a specific team record against the Pac-12), or home and away records. You can use conferencewins column and conferenceloss column to output a win-loss record. The input is a formatted string of the original question and season, for example: 'question: How did Duke do against the ACC last season? : season: 2023, team_name: Duke Blue Devils, conference: ACC' The current season is 2024.'"""
     args_schema: Type[BaseModel] = ScheduleInput
 
     def _run(
             self, param_string: str) -> pd.DataFrame:
         # get the abbreviated
-        
-        print(param_string)
         season = param_string.split("season: ")[1].split()[0]
+        team_name = param_string.split("team_name: ")[1].split()[0]
+        teamid = team_ids[team_name]
+        numberofgames = 'all'
+        pattern = r"conference: ([^,]+)"
+
+        # Search the string using the regular expression
+        match = re.search(pattern, param_string)
+
+        # If a match is found, extract the conference name
+        if match:
+            conference_name = match.group(1).strip()  # Remove any leading/trailing whitespace
+        else:
+            conference_name = None  # or set to a default value or error message
         question = param_string.split("question:")[1]
-        print(question, season)
-        URL = f"https://api.sportsdata.io/v3/cbb/scores/json/SchedulesBasic/{season}"
+        print(season, teamid, numberofgames)
+        URL = f"https://api.sportsdata.io/v3/cbb/scores/json/TeamGameStatsBySeason/{season}/{teamid}/{numberofgames}"
 
         data = requests.get(
             URL, headers={'Ocp-Apim-Subscription-Key': sports_data_key})
-        df = pd.DataFrame(data.json())
-
-        df_agent = create_pandas_dataframe_agent(
-            ChatOpenAI(temperature=0, model="gpt-4",
-                       openai_api_key=open_ai_key),
-            df,
-            verbose=True,
-            agent_type=AgentType.OPENAI_FUNCTIONS,
-            openai_api_key=open_ai_key
-        )
-        question_agent = question + \
-            " The dataframe given is a dataframe of a team schedule over the entire season."
-
-        response = df_agent.run(question_agent)
+        print(data)
+        data_json = data.json()
+        df = pd.DataFrame(data_json)
+        
+        response = f"{team_name} has a record of {df['ConferenceWins'].sum()} - {df['ConferenceLosses'].sum()} against the {conference_name} this season."
 
         return response
