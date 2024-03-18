@@ -9,10 +9,15 @@ from tools.LeagueHierarchy import LeagueHierarchy
 from tools.Internet import InternetModel
 from tools.PlayerSeasonStats import PlayerSeasonStats
 from tools.PlayerGameStats import PlayerGameStats
-from tools.OpposingTeam import OpposingTeamStats
+from tools.BettingTrendsByMatchup import BettingTrendsByMatchup
 from tools.Schedule import Schedule
+from tools.TeamStatistics import TeamStatistics
 from langchain import hub
 from langchain.agents import initialize_agent
+
+from pymongo.mongo_client import MongoClient
+from pymongo.server_api import ServerApi
+
 
 
 import dotenv
@@ -20,6 +25,8 @@ import os
 dotenv.load_dotenv()
 open_ai_key = os.getenv("OPENAI_API_KEY")
 
+MONGO_USER = os.getenv("MONGO_USER")
+MONGO_PASS = os.getenv("MONGO_PASSWORD")
 
 app = Flask(__name__)
 
@@ -33,15 +40,16 @@ def chat():
     InternetTool = InternetModel()
     PlayerSeasonStatsTool = PlayerSeasonStats()
     PlayerGameStatsTool = PlayerGameStats()
-    OpposingTeamStatsTool = OpposingTeamStats()
+    BettingTrendsByMatchupTool = BettingTrendsByMatchup()
     ScheduleTool = Schedule()
+    TeamStatisticsTool = TeamStatistics()
     llm = ChatOpenAI(
         temperature=0,
         model_name='gpt-4',
         openai_api_key=open_ai_key)
     tools = [LeagueHierarchyTool, TeamTrendsTool,
              PlayerSeasonStatsTool, PlayerGameStatsTool, InternetTool, 
-             OpposingTeamStatsTool, ScheduleTool]
+             BettingTrendsByMatchupTool, ScheduleTool, TeamStatisticsTool]
 
     agent = initialize_agent(
         agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
@@ -53,6 +61,22 @@ def chat():
     )
 
     response = agent.invoke({"input": question, 'chat_history': []})
+
+    uri = "mongodb+srv://{MONGO_USER}:{MONGO_PASS}@alpha.nwl3wmb.mongodb.net/?retryWrites=true&w=majority&appName=Alpha"
+    client = MongoClient(uri, server_api=ServerApi('1'))
+    try:
+        client.admin.command('ping')
+        print("Pinged your deployment. You successfully connected to MongoDB!")
+    except Exception as e:
+        print(e)
+    db = client['billybets']
+    collection = db['results']
+
+    doc = {'question': 'some question', 'answer': 'some answer'}
+
+
+    collection.insert_one(doc)
+
 
     return jsonify({"response": response, "time": time.time() - start})
 
