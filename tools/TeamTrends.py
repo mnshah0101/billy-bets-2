@@ -10,6 +10,7 @@ import dotenv
 import os
 from langchain.agents import AgentType
 from dotenv import load_dotenv
+import difflib
 
 load_dotenv()
 open_ai_key = os.getenv("OPENAI_API_KEY")
@@ -38,9 +39,14 @@ class TeamTrends(BaseTool):
         team = param_string.split("team_abbr: ")[
             1].replace("'", "").replace('""', '')
         question = param_string.split("question:")[1]
+
+        
+
         if team not in team_ids:
             return f"Team {team} not found in the database. Please try again with a different team or check the spelling."
+            
         team_abbr = team_ids[team].strip()
+        
 
         URL = f"https://api.sportsdata.io/v3/cbb/odds/json/TeamTrends/{team_abbr}"
         data = requests.get(

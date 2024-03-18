@@ -1,5 +1,5 @@
 {
-    "SMU": "SMU",
+    "SMU": "SMU",  
     "Southern Methodist": "SMU",
     "Temple": "TEMPL",
     "Connecticut": "UCONN",
@@ -111,6 +111,8 @@
     "West Virginia": "WVIR",
     "Baylor": "BAYL",
     "Texas": "TX",
+    "UT Austin": "TX",
+    "Longhorns": "TX", 
     "Iowa State": "IOWAST",
     "Texas Tech": "TXTECH",
     "Kansas State": "KANST",
