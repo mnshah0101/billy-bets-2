@@ -18,30 +18,23 @@ sports_data_key = os.getenv("SPORTS_DATA_IO_API_KEY")
 
 class ScheduleInput(BaseModel):
     season: int = Field(
-        description='An integer of the season to get the schedule for.')
+        description="""A formatted string of the original question and season, for example: 'question: What is Duke and North Carolina's Head to head record over the last 5 games? : season: 2023' """)
 
 
 class Schedule(BaseTool):
     name = "Schedule"
-    description = """Describes player stats and performance in a single gasme. Useful for finding player season highs in a specific category, such as points or assists. Also useful for determining a player's performance against a single opponent. The input is a formatted string of the original question, player name, and season, for example: 'question: How many points did Zach Edey average last season? : player_name: Zach Edey, season: 2023' The current season is 2024.'"""
-    args_schema: Type[BaseModel] = PlayerGameStatsInput
+    description = """Describes the schedule of games for a given season. Useful for finding team records against a specific conference, or home and away records. The input is a formatted string of the original question and season, for example: 'question: How did Duke do against the ACC last season? : season: 2023' The current season is 2024.'"""
+    args_schema: Type[BaseModel] = ScheduleInput
 
     def _run(
             self, param_string: str) -> pd.DataFrame:
         # get the abbreviated
-        numberofgames = 'all'
-        player_name = param_string.split("player_name: ")[
-            1].replace("'", "").replace('""', '').strip()
-        player_name = player_name.split(',')[0].strip()
-        season = param_string.split("season: ")[
-            1].replace("'", "").replace('""', '')
+        
+        print(param_string)
+        season = param_string.split("season: ")[1].split()[0]
         question = param_string.split("question:")[1]
-
-        if player_name not in player_ids:
-            return f"Player {player_name} not found in the database. Please try again with a different player or check the spelling."
-        playerid = player_ids[player_name]
-
-        URL = f"https://api.sportsdata.io/v3/cbb/stats/json/PlayerGameStatsBySeason/{season}/{playerid}/{numberofgames}"
+        print(question, season)
+        URL = f"https://api.sportsdata.io/v3/cbb/scores/json/SchedulesBasic/{season}"
 
         data = requests.get(
             URL, headers={'Ocp-Apim-Subscription-Key': sports_data_key})
@@ -56,7 +49,7 @@ class Schedule(BaseTool):
             openai_api_key=open_ai_key
         )
         question_agent = question + \
-            " The dataframe given is a dataframe of a players stats in every game over a specific season."
+            " The dataframe given is a dataframe of a team schedule over the entire season."
 
         response = df_agent.run(question_agent)
 

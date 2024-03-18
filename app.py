@@ -9,6 +9,8 @@ from tools.LeagueHierarchy import LeagueHierarchy
 from tools.Internet import InternetModel
 from tools.PlayerSeasonStats import PlayerSeasonStats
 from tools.PlayerGameStats import PlayerGameStats
+from tools.OpposingTeam import OpposingTeamStats
+from tools.Schedule import Schedule
 from langchain import hub
 from langchain.agents import initialize_agent
 
@@ -31,12 +33,15 @@ def chat():
     InternetTool = InternetModel()
     PlayerSeasonStatsTool = PlayerSeasonStats()
     PlayerGameStatsTool = PlayerGameStats()
+    OpposingTeamStatsTool = OpposingTeamStats()
+    ScheduleTool = Schedule()
     llm = ChatOpenAI(
         temperature=0,
         model_name='gpt-4',
         openai_api_key=open_ai_key)
     tools = [LeagueHierarchyTool, TeamTrendsTool,
-             PlayerSeasonStatsTool, PlayerGameStatsTool, InternetTool]
+             PlayerSeasonStatsTool, PlayerGameStatsTool, InternetTool, 
+             OpposingTeamStatsTool, ScheduleTool]
 
     agent = initialize_agent(
         agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
