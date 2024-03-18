@@ -17,7 +17,7 @@ sports_data_key = os.getenv("SPORTS_DATA_IO_API_KEY")
 
 
 class ScheduleInput(BaseModel):
-    season: int = Field(
+    season: str = Field(
         description="""A formatted string of the original question and season, for example: 'question: What is Duke and North Carolina's Head to head record over the last 5 games? : season: 2023' """)
 
 
