@@ -6,6 +6,9 @@ import time
 from flask import Flask, request, jsonify
 from tools.TeamTrends import TeamTrends
 from tools.LeagueHierarchy import LeagueHierarchy
+from tools.Internet import InternetModel
+from tools.PlayerSeasonStats import PlayerSeasonStats
+from tools.PlayerGameStats import PlayerGameStats
 from langchain import hub
 from langchain.agents import initialize_agent
 
@@ -25,11 +28,15 @@ def chat():
     question = request.args.get('question')
     TeamTrendsTool = TeamTrends()
     LeagueHierarchyTool = LeagueHierarchy()
+    InternetTool = InternetModel()
+    PlayerSeasonStatsTool = PlayerSeasonStats()
+    PlayerGameStatsTool = PlayerGameStats()
     llm = ChatOpenAI(
         temperature=0,
         model_name='gpt-4',
         openai_api_key=open_ai_key)
-    tools = [LeagueHierarchyTool, TeamTrendsTool]
+    tools = [LeagueHierarchyTool, TeamTrendsTool,
+             PlayerSeasonStatsTool, PlayerGameStatsTool, InternetTool]
 
     agent = initialize_agent(
         agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,

@@ -21,7 +21,7 @@ class LeagueHierarchyInput(BaseModel):
 
 class LeagueHierarchy(BaseTool):
     name = "LeagueHierarchy"
-    description = "Useful for getting a college team's current season standings in the college basketball league standings or for any conference's standings with records. Inputs the user's question as a string."
+    description = "Useful for getting a college team's current season standings or current season record in the college basketball league standings or for any conference's standings with records. Inputs the user's question as a string."
 
     def _run(
             self, question: str) -> pd.DataFrame:

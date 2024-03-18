@@ -54,7 +54,7 @@ class TeamTrends(BaseTool):
             agent_type=AgentType.OPENAI_FUNCTIONS,
             openai_api_key=open_ai_key
         )
-        question_agent = question + " The DataFrame given is a DataFrame of a teams trends within a given scope of last 3, 5 or 10 games versus the spread. Default to scope of the last 10 games."
+        question_agent = question + " This dataframe has a column called scope which can be either Last 3 Games, Last 3 Away Games, Last 3 Home Games, Last 3 Games as Favorite, and Last 3 Games as Underdog. It also has the same options but for Last 5 Games and Last 10 Games."
 
         response = df_agent.run(question_agent)
 
