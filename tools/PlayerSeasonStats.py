@@ -19,21 +19,19 @@ sports_data_key = os.getenv("SPORTS_DATA_IO_API_KEY")
 class PlayerSeasonStatsInput(BaseModel):
     param_string: str = Field(
         description="""A formatted string of the original question, player name, and season, for example: 'question: How many points did Zach Edey average last season? : player_name: Zach Edey, season: 2023' """)
-    
-class PlayerSeasonStats(BaseTool): 
-    name="PlayerStats"
-    description = """Describes player stats and performance over a given season. Useful for answering questions about seasonal averages of statistical categories, such as points per game, assists, rebounds, etc."""
-    args_schema: Type[BaseModel] = PlayerSeasonStatsInput
 
+
+class PlayerSeasonStats(BaseTool):
+    name = "PlayerSeasonStats"
+    description = """Describes player stats and performance over a given season. Useful for answering questions about seasonal averages of statistical categories, such as points per game, assists, rebounds, etc. Input a formatted string of the original question, player name, and season, for example: 'question: How many points did Zach Edey average last season? : player_name: Zach Edey, season: 2023'"""
+    args_schema: Type[BaseModel] = PlayerSeasonStatsInput
 
     def _run(
             self, param_string: str) -> pd.DataFrame:
         # get the abbreviated
-        print(param_string)
-        season = param_string.split("season: ")[
-            1].replace("'", "").replace('""', '')
+        season = param_string.split("season: ")[1].split()[0]
         question = param_string.split("question:")[1]
-      
+
         URL = f"https://api.sportsdata.io/v3/cbb/stats/json/PlayerSeasonStats/{season}"
         data = requests.get(
             URL, headers={'Ocp-Apim-Subscription-Key': sports_data_key})
@@ -47,7 +45,8 @@ class PlayerSeasonStats(BaseTool):
             agent_type=AgentType.OPENAI_FUNCTIONS,
             openai_api_key=open_ai_key
         )
-        question_agent = question + " The dataframe given is a dataframe of a players stats within a given season."
+        question_agent = question + \
+            " The dataframe given is a dataframe of a players stats within a given season."
 
         response = df_agent.run(question_agent)
 

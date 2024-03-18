@@ -15,18 +15,15 @@ dotenv.load_dotenv()
 open_ai_key = os.getenv("OPENAI_API_KEY")
 sports_data_key = os.getenv("SPORTS_DATA_IO_API_KEY")
 
-with open('./jsons/player_ids.json') as f:
-    player_ids = json.load(f)
+
+class ScheduleInput(BaseModel):
+    season: int = Field(
+        description='An integer of the season to get the schedule for.')
 
 
-class PlayerGameStatsInput(BaseModel):
-    param_string: str = Field(
-        description="""A formatted string of the original question, player name, and season, for example: 'question: How many points did Zach Edey average last season? : player_name: Zach Edey, season: 2023' """)
-
-
-class PlayerGameStats(BaseTool):
-    name = "PlayerGameStats"
-    description = """Describes player stats and performance in a single game. Useful for finding player season highs in a specific category, such as points or assists. Also useful for determining a player's performance against a single opponent. The input is a formatted string of the original question, player name, and season, for example: 'question: How many points did Zach Edey average last season? : player_name: Zach Edey, season: 2023' The current season is 2024.'"""
+class Schedule(BaseTool):
+    name = "Schedule"
+    description = """Describes player stats and performance in a single gasme. Useful for finding player season highs in a specific category, such as points or assists. Also useful for determining a player's performance against a single opponent. The input is a formatted string of the original question, player name, and season, for example: 'question: How many points did Zach Edey average last season? : player_name: Zach Edey, season: 2023' The current season is 2024.'"""
     args_schema: Type[BaseModel] = PlayerGameStatsInput
 
     def _run(
