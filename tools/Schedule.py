@@ -9,55 +9,88 @@ from typing import Type
 import dotenv
 import os
 from langchain.agents import AgentType
+import re
 
 
 dotenv.load_dotenv()
 open_ai_key = os.getenv("OPENAI_API_KEY")
 sports_data_key = os.getenv("SPORTS_DATA_IO_API_KEY")
 
+with open('./jsons/team_id.json') as f:
+    team_ids = json.load(f)
+
+ranked_teams = set([3, 6, 94, 110, 21, 277, 279, 65, 247, 102, 61, 268, 26, 108, 335, 267, 106, 334, 275, 220, 336, 111, 96, 212, 256])
+
 
 class ScheduleInput(BaseModel):
-    season: int = Field(
-        description='An integer of the season to get the schedule for.')
+    season: str = Field(
+        description="""A formatted string of the original question and season, for example: 'question: What is Duke's record against ranked ACC teams last season at home? : season: 2023, team_name : Duke Blue Devils, conference: ACC, ranked: True, home_or_away: home' """)
 
 
 class Schedule(BaseTool):
-    name = "Schedule"
-    description = """Describes player stats and performance in a single gasme. Useful for finding player season highs in a specific category, such as points or assists. Also useful for determining a player's performance against a single opponent. The input is a formatted string of the original question, player name, and season, for example: 'question: How many points did Zach Edey average last season? : player_name: Zach Edey, season: 2023' The current season is 2024.'"""
-    args_schema: Type[BaseModel] = PlayerGameStatsInput
+    name = "Team Wins and Team Conference Wins"
+    description = """Describes the schedule of games for a given season. Useful for finding team records against a specific conference (for example, what is a specific team record against the Pac-12), or home and away records. Sum up the ConferenceWins and ConferenceLosses column for the win-loss record and then also make sure to factor in home vs. away. The input is a formatted string of the original question and season, for example: 'question: How did Duke do against ranked ACC teams last season at home? : season: 2023, team_name: Duke Blue Devils, conference: ACC, ranked: True, home_or_away: home' The current season is 2024.'"""
+    args_schema: Type[BaseModel] = ScheduleInput
 
     def _run(
             self, param_string: str) -> pd.DataFrame:
+        
+        print(param_string)
         # get the abbreviated
+        season = param_string.split("season: ")[1].split()[0]
+        try:
+            ranked = param_string.split("ranked: ")[1].split()[0]
+        except (IndexError, AttributeError):  # Catches if the split results in an index error or param_string is None
+            ranked = None
+
+        team_name = param_string.split("team_name: ")[1].split()[0]
+        teamid = team_ids[team_name]
+        if param_string.__contains__('home_or_away:'):
+            home_or_away = param_string.split("home_or_away: ")[
+                1].replace("'", "").replace('""', '')
+        else: 
+            home_or_away = None
         numberofgames = 'all'
-        player_name = param_string.split("player_name: ")[
-            1].replace("'", "").replace('""', '').strip()
-        player_name = player_name.split(',')[0].strip()
-        season = param_string.split("season: ")[
-            1].replace("'", "").replace('""', '')
+        pattern = r"conference: ([^,]+)"
+
+        # Search the string using the regular expression
+        match = re.search(pattern, param_string)
+
+        # If a match is found, extract the conference name
+        if match:
+            conference_name = match.group(1).strip()  # Remove any leading/trailing whitespace
+        else:
+            conference_name = None  # or set to a default value or error message
         question = param_string.split("question:")[1]
-
-        if player_name not in player_ids:
-            return f"Player {player_name} not found in the database. Please try again with a different player or check the spelling."
-        playerid = player_ids[player_name]
-
-        URL = f"https://api.sportsdata.io/v3/cbb/stats/json/PlayerGameStatsBySeason/{season}/{playerid}/{numberofgames}"
+      
+        URL = f"https://api.sportsdata.io/v3/cbb/scores/json/TeamGameStatsBySeason/{season}/{teamid}/{numberofgames}"
 
         data = requests.get(
             URL, headers={'Ocp-Apim-Subscription-Key': sports_data_key})
-        df = pd.DataFrame(data.json())
+        print(data)
+        data_json = data.json()
+        df = pd.DataFrame(data_json)
 
-        df_agent = create_pandas_dataframe_agent(
-            ChatOpenAI(temperature=0, model="gpt-4",
-                       openai_api_key=open_ai_key),
-            df,
-            verbose=True,
-            agent_type=AgentType.OPENAI_FUNCTIONS,
-            openai_api_key=open_ai_key
-        )
-        question_agent = question + \
-            " The dataframe given is a dataframe of a players stats in every game over a specific season."
 
-        response = df_agent.run(question_agent)
+        if ranked: 
+            print("Hi")
+            df = df[df['OpponentID'].isin(ranked_teams)]
+        #response = df_agent.run(question)
+        if home_or_away:
+            if home_or_away == 'home':
+                print(df)
+                df = df[df['HomeOrAway'] == 'HOME']
+            elif home_or_away == 'away':
+                df = df[df['HomeOrAway'] == 'AWAY']
 
+        #   
+        if conference_name: 
+            response = f"{team_name} has a record of {df['ConferenceWins'].sum()} - {df['ConferenceLosses'].sum()} against the {conference_name} this season."
+        else: 
+            response = f"{team_name} has a record of {df['Wins'].sum()} - {df['Losses'].sum()} this season."
+
+        if home_or_away and conference_name: 
+            response += f" {team_name} has a record of {df['ConferenceWins'].sum()} - {df['ConferenceLosses'].sum()} at {home_or_away.lower()} this season."
+        elif home_or_away: 
+            response += f" {team_name} has a record of {df['Wins'].sum()} - {df['Losses'].sum()} at {home_or_away.lower()} this season."
         return response

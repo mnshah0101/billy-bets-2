@@ -9,8 +9,10 @@ from typing import Type
 import dotenv
 import os
 from langchain.agents import AgentType
+from dotenv import load_dotenv
+import difflib
 
-dotenv.load_dotenv()
+load_dotenv()
 open_ai_key = os.getenv("OPENAI_API_KEY")
 sports_data_key = os.getenv("SPORTS_DATA_IO_API_KEY")
 
@@ -26,7 +28,7 @@ class TeamTrendsInput(BaseModel):
 
 class TeamTrends(BaseTool):
     name = "TeamTrends"
-    description = "Describes recent team trends and performance against betting data in recent sets of games for college basketball teams. Useful for answering questions about how teams performed against the spread and how teams performed in general in the last 3, 5, or 10 games. The input is formatted string of the original question and team name for example: 'question: How did Duke do against the spread this last season? : team_abbr: Duke "
+    description = "Describes recent team trends and performance against betting data in recent sets of games for college basketball teams. Useful for answering questions about how teams performed against the spread in the last 3, 5, or 10 games. Treat every question about record to be answered in win-loss format. The input is formatted string of the original question and team name for example: 'question: How did Duke do against the spread this last season? : team_abbr: Duke "
     args_schema: Type[BaseModel] = TeamTrendsInput
 
     def _run(
@@ -39,13 +41,15 @@ class TeamTrends(BaseTool):
         question = param_string.split("question:")[1]
         if team not in team_ids:
             return f"Team {team} not found in the database. Please try again with a different team or check the spelling."
-        team_abbr = team_ids[team].strip()
+        team_abbr = team_ids[team]
 
         URL = f"https://api.sportsdata.io/v3/cbb/odds/json/TeamTrends/{team_abbr}"
         data = requests.get(
             URL, headers={'Ocp-Apim-Subscription-Key': sports_data_key})
+        print(data)
+        
         df = pd.DataFrame(data.json()['TeamGameTrends'])
-
+        
         df_agent = create_pandas_dataframe_agent(
             ChatOpenAI(temperature=0, model="gpt-4",
                        openai_api_key=open_ai_key),

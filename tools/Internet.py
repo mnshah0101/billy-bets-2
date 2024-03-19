@@ -99,7 +99,7 @@ def get_search_string(query):
 def get_answer(question, text):
     prompt = ChatPromptTemplate.from_template(
         "Answer this question as an expert sports AI model interacting with a user: {question} given this web page text from a web page. If you cannot answer the question, output 'NOT_ENOUGH_INFORMATION_ERROR' word for word. This is the web pages text: {web_page_text} ")
-    model = ChatOpenAI(model="gpt-4",
+    model = ChatOpenAI(model="gpt-4-0125-preview",
                        api_key=os.getenv('OPENAI_API_KEY'))
     output_parser = StrOutputParser()
     try:
@@ -113,7 +113,7 @@ def get_answer(question, text):
 
 def create_google_query(question):
     prompt = ChatPromptTemplate.from_template(
-        "Create the google search query that will find relevant articles to answer this question. Do not provide any explanation. For example, the question: Who are players experts are looking forward? to should yield the search: Kansas college basketball players to look out for. The most current year is 2024. This is the question: {question}.")
+        "Create the google search query that will find relevant articles to answer this question. Do not provide any explanation. For example, the question: Who are players experts are looking forward? to should yield the search: Kansas college basketball players to look out for. The most current year is 2024. Include the year in your search to get the most pertinent results. Questions should be about college basketball. This is the question: {question}.")
     model = ChatOpenAI(model="gpt-4",
                        api_key=os.getenv('OPENAI_API_KEY'))
     output_parser = StrOutputParser()
@@ -129,7 +129,7 @@ def get_links_from_search(query):
     response = search.results(query, 10)
 
     links = [res['link']
-             for res in response if 'youtube' and 'reddit' and 'instagram' and 'video' and 'facebook' and 'twitter' and 'tiktok' not in res['link']]
+             for res in response if 'youtube' and 'wikipedia' and 'kentucky.com/sports' and 'reddit' and 'instagram' and 'video' and 'facebook' and 'twitter' and 'tiktok' not in res['link']]
 
     return links
 
@@ -160,7 +160,7 @@ class InternetToolInput(BaseModel):
 
 class InternetModel(BaseTool):
     name = "Internet Tool"
-    description = "Use this tool for expert opinion questions or as a fallback option if none of the other endpoints work. The input is the search query to be used, such as, 'How do experts think Duke will do in their next upcoming game.'"
+    description = "Use this tool for expert opinion questions or as a fallback option if none of the other endpoints work. The input is the search query to be used, such as, 'How do experts think Duke will do in their next upcoming game.' The current season is 2024."
     args_schema: Type[BaseModel] = InternetToolInput
 
     def _run(
