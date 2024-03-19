@@ -14,7 +14,7 @@ import difflib
 
 load_dotenv()
 open_ai_key = os.getenv("OPENAI_API_KEY")
-sports_data_key = os.getenv("SPORTS_DATA_IO_API_KEY")
+sports_data_key = "66b9a43385ed4dc981818ad925d0efb9"
 
 team_ids = {}
 with open('./jsons/team_abbr.json') as f:
@@ -40,18 +40,20 @@ class TeamTrends(BaseTool):
             1].replace("'", "").replace('""', '')
         question = param_string.split("question:")[1]
 
+        listOfTeams= team_ids.keys()
+        team = difflib.get_close_matches(team, listOfTeams)[0]
         
 
         if team not in team_ids:
             return f"Team {team} not found in the database. Please try again with a different team or check the spelling."
-            
+
         team_abbr = team_ids[team].strip()
+        
         
 
         URL = f"https://api.sportsdata.io/v3/cbb/odds/json/TeamTrends/{team_abbr}"
         data = requests.get(
             URL, headers={'Ocp-Apim-Subscription-Key': sports_data_key})
-        print(data)
         
         df = pd.DataFrame(data.json()['TeamGameTrends'])
         

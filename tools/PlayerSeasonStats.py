@@ -23,7 +23,7 @@ class PlayerSeasonStatsInput(BaseModel):
 
 class PlayerSeasonStats(BaseTool):
     name = "PlayerSeasonStats"
-    description = """Describes player stats and performance over a given season. Useful for answering questions about seasonal averages of statistical categories, such as points per game, assists, rebounds, etc. Input a formatted string of the original question, player name, and season, for example: 'question: How many points did Zach Edey average last season? : player_name: Zach Edey, season: 2023'"""
+    description = """Describes player stats and performance over a given season. Useful for answering questions about seasonal averages of statistical categories, such as points per game, assists, rebounds, etc. Input a formatted string of the original question, player name, and season, for example: 'question: How many points did Zach Edey average last season? : player_name: Zach Edey, season: 2023. To solve such a question like the average amount of assists take the average for our example: 'Jared McCain'[df['Season'] == 2024]['Assists'].mean()/naverage_points'"""
     args_schema: Type[BaseModel] = PlayerSeasonStatsInput
 
     def _run(
@@ -36,7 +36,7 @@ class PlayerSeasonStats(BaseTool):
         data = requests.get(
             URL, headers={'Ocp-Apim-Subscription-Key': sports_data_key})
         df = pd.DataFrame(data.json())
-
+        print(df)
         df_agent = create_pandas_dataframe_agent(
             ChatOpenAI(temperature=0, model="gpt-4",
                        openai_api_key=open_ai_key),
@@ -51,3 +51,4 @@ class PlayerSeasonStats(BaseTool):
         response = df_agent.run(question_agent)
 
         return response
+
