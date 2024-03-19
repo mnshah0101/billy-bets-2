@@ -60,7 +60,7 @@ def chat():
     chat_history = chat_history[:-5]
 
     response = agent.invoke(
-        {"input": question + " Here is the chat history" + str(chat_history), 'chat_history': chat_history})
+        {"input": question + " Here is the chat history: " + str(chat_history), 'chat_history': []})
 
     return jsonify({"response": response, "time": time.time() - start})
 
