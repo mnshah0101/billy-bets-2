@@ -38,7 +38,7 @@ class PlayerSeasonStats(BaseTool):
         df = pd.DataFrame(data.json())
 
         df_agent = create_pandas_dataframe_agent(
-            ChatOpenAI(temperature=0, model="gpt-4",
+            ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0613",
                        openai_api_key=open_ai_key),
             df,
             verbose=True,

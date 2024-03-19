@@ -62,22 +62,6 @@ def chat():
 
     response = agent.invoke({"input": question, 'chat_history': []})
 
-    uri = "mongodb+srv://{MONGO_USER}:{MONGO_PASS}@alpha.nwl3wmb.mongodb.net/?retryWrites=true&w=majority&appName=Alpha"
-    client = MongoClient(uri, server_api=ServerApi('1'))
-    try:
-        client.admin.command('ping')
-        print("Pinged your deployment. You successfully connected to MongoDB!")
-    except Exception as e:
-        print(e)
-    db = client['billybets']
-    collection = db['results']
-
-    doc = {'question': 'some question', 'answer': 'some answer'}
-
-
-    collection.insert_one(doc)
-
-
     return jsonify({"response": response, "time": time.time() - start})
 
 
