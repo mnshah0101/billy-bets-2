@@ -47,9 +47,9 @@ def chat():
         temperature=0,
         model_name='gpt-4',
         openai_api_key=open_ai_key)
-    tools = [LeagueHierarchyTool, TeamTrendsTool,
-             PlayerSeasonStatsTool, PlayerGameStatsTool, InternetTool, 
-             BettingTrendsByMatchupTool, ScheduleTool, TeamStatisticsTool]
+    tools = [ScheduleTool, LeagueHierarchyTool, TeamTrendsTool,
+             PlayerGameStatsTool, InternetTool, 
+             BettingTrendsByMatchupTool, TeamStatisticsTool]
 
     agent = initialize_agent(
         agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
@@ -61,6 +61,7 @@ def chat():
     )
 
     response = agent.invoke({"input": question, 'chat_history': []})
+
 
     return jsonify({"response": response, "time": time.time() - start})
 

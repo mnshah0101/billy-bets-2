@@ -19,16 +19,17 @@ sports_data_key = os.getenv("SPORTS_DATA_IO_API_KEY")
 with open('./jsons/team_id.json') as f:
     team_ids = json.load(f)
 
+ranked_teams = set([3, 6, 94, 110, 21, 277, 279, 65, 247, 102, 61, 268, 26, 108, 335, 267, 106, 334, 275, 220, 336, 111, 96, 212, 256])
 
 
 class ScheduleInput(BaseModel):
     season: str = Field(
-        description="""A formatted string of the original question and season, for example: 'question: What is Duke's record against the ACC last season at home? : season: 2023, team_name : Duke Blue Devils, conference: ACC, home_or_away: home' """)
+        description="""A formatted string of the original question and season, for example: 'question: What is Duke's record against ranked ACC teams last season at home? : season: 2023, team_name : Duke Blue Devils, conference: ACC, ranked: True, home_or_away: home' """)
 
 
 class Schedule(BaseTool):
-    name = "Team Wins"
-    description = """Describes the schedule of games for a given season. Useful for finding team records against a specific conference (for example, what is a specific team record against the Pac-12), or home and away records. Sum up the ConferenceWins and ConferenceLosses column for the win-loss record and then also make sure to factor in home vs. away. The input is a formatted string of the original question and season, for example: 'question: How did Duke do against the ACC last season? : season: 2023, team_name: Duke Blue Devils, conference: ACC, home_or_away: home' The current season is 2024.'"""
+    name = "Team Wins and Team Conference Wins"
+    description = """Describes the schedule of games for a given season. Useful for finding team records against a specific conference (for example, what is a specific team record against the Pac-12), or home and away records. Sum up the ConferenceWins and ConferenceLosses column for the win-loss record and then also make sure to factor in home vs. away. The input is a formatted string of the original question and season, for example: 'question: How did Duke do against ranked ACC teams last season at home? : season: 2023, team_name: Duke Blue Devils, conference: ACC, ranked: True, home_or_away: home' The current season is 2024.'"""
     args_schema: Type[BaseModel] = ScheduleInput
 
     def _run(
@@ -37,6 +38,11 @@ class Schedule(BaseTool):
         print(param_string)
         # get the abbreviated
         season = param_string.split("season: ")[1].split()[0]
+        try:
+            ranked = param_string.split("ranked: ")[1].split()[0]
+        except (IndexError, AttributeError):  # Catches if the split results in an index error or param_string is None
+            ranked = None
+
         team_name = param_string.split("team_name: ")[1].split()[0]
         teamid = team_ids[team_name]
         if param_string.__contains__('home_or_away:'):
@@ -64,15 +70,11 @@ class Schedule(BaseTool):
         print(data)
         data_json = data.json()
         df = pd.DataFrame(data_json)
-        df_agent = create_pandas_dataframe_agent(
-            ChatOpenAI(temperature=0, model="gpt-4",
-                       openai_api_key=open_ai_key),
-            df,
-            verbose=True,
-            agent_type=AgentType.OPENAI_FUNCTIONS,
-            openai_api_key=open_ai_key
-        )
-        
+
+
+        if ranked: 
+            print("Hi")
+            df = df[df['OpponentID'].isin(ranked_teams)]
         #response = df_agent.run(question)
         if home_or_away:
             if home_or_away == 'home':
@@ -80,8 +82,15 @@ class Schedule(BaseTool):
                 df = df[df['HomeOrAway'] == 'HOME']
             elif home_or_away == 'away':
                 df = df[df['HomeOrAway'] == 'AWAY']
-            
-        #    
-        response = f"{team_name} has a record of {df['ConferenceWins'].sum()} - {df['ConferenceLosses'].sum()} against the {conference_name} this season."
 
+        #   
+        if conference_name: 
+            response = f"{team_name} has a record of {df['ConferenceWins'].sum()} - {df['ConferenceLosses'].sum()} against the {conference_name} this season."
+        else: 
+            response = f"{team_name} has a record of {df['Wins'].sum()} - {df['Losses'].sum()} this season."
+
+        if home_or_away and conference_name: 
+            response += f" {team_name} has a record of {df['ConferenceWins'].sum()} - {df['ConferenceLosses'].sum()} at {home_or_away.lower()} this season."
+        elif home_or_away: 
+            response += f" {team_name} has a record of {df['Wins'].sum()} - {df['Losses'].sum()} at {home_or_away.lower()} this season."
         return response

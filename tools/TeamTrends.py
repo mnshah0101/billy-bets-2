@@ -10,6 +10,7 @@ import dotenv
 import os
 from langchain.agents import AgentType
 from dotenv import load_dotenv
+import difflib
 
 load_dotenv()
 open_ai_key = os.getenv("OPENAI_API_KEY")
@@ -27,7 +28,7 @@ class TeamTrendsInput(BaseModel):
 
 class TeamTrends(BaseTool):
     name = "TeamTrends"
-    description = "Describes recent team trends and performance against betting data in recent sets of games for college basketball teams. Useful for answering questions about how teams performed against the spread and how teams performed in general in the last 3, 5, or 10 games. Treat every question about record to be answered in win-loss format. The input is formatted string of the original question and team name for example: 'question: How did Duke do against the spread this last season? : team_abbr: Duke "
+    description = "Describes recent team trends and performance against betting data in recent sets of games for college basketball teams. Useful for answering questions about how teams performed against the spread in the last 3, 5, or 10 games. Treat every question about record to be answered in win-loss format. The input is formatted string of the original question and team name for example: 'question: How did Duke do against the spread this last season? : team_abbr: Duke "
     args_schema: Type[BaseModel] = TeamTrendsInput
 
     def _run(
