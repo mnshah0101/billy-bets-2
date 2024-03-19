@@ -11,6 +11,7 @@ from tools.PlayerSeasonStats import PlayerSeasonStats
 from tools.PlayerGameStats import PlayerGameStats
 from langchain import hub
 from langchain.agents import initialize_agent
+from flask_cors import CORS, cross_origin
 
 
 import dotenv
@@ -20,12 +21,22 @@ open_ai_key = os.getenv("OPENAI_API_KEY")
 
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 
 @app.route('/chat')
+@cross_origin()
 def chat():
+    print('hit')
     start = time.time()
     question = request.args.get('question')
+    chat_history = request.args.get('chat_history')
+    if (chat_history == None):
+        chat_history = []
+    print('chat_history')
+    print(chat_history)
+
     TeamTrendsTool = TeamTrends()
     LeagueHierarchyTool = LeagueHierarchy()
     InternetTool = InternetModel()
@@ -46,8 +57,10 @@ def chat():
         max_iterations=3,
         early_stopping_method='generate'
     )
+    chat_history = chat_history[:-5]
 
-    response = agent.invoke({"input": question, 'chat_history': []})
+    response = agent.invoke(
+        {"input": question + " Here is the chat history" + str(chat_history), 'chat_history': chat_history})
 
     return jsonify({"response": response, "time": time.time() - start})
 
