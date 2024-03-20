@@ -97,14 +97,27 @@ def get_search_string(query):
 
 
 def get_answer(question, text):
-    prompt = ChatPromptTemplate.from_template(
-        "Answer this question as an expert sports AI model interacting with a user: {question} given this web page text from a web page. If you cannot answer the question, output 'NOT_ENOUGH_INFORMATION_ERROR' word for word. This is the web pages text: {web_page_text} ")
-    model = ChatOpenAI(model="gpt-4-0125-preview",
-                       api_key=os.getenv('OPENAI_API_KEY'))
+
+    turbo_prompt = ChatPromptTemplate.from_template(
+        "Based on this question: {question}, process this text from a web page to extract the most important information: {web_page_text}")
+    turbo_model = ChatOpenAI(model="gpt-3.5-turbo",
+                             api_key=os.getenv('OPENAI_API_KEY'))
+
+    gpt4_prompt_template = ChatPromptTemplate.from_template(
+        "Answer this question as an expert sports AI model interacting with a user: {question} using the essential information processed from the web page. If you cannot answer the question, output 'NOT_ENOUGH_INFORMATION_ERROR' word for word. Processed web page text: {processed_text}")
+    gpt4_model = ChatOpenAI(model="gpt-4-0125-preview",
+                            api_key=os.getenv('OPENAI_API_KEY'))
+
     output_parser = StrOutputParser()
+
     try:
-        chain = prompt | model | output_parser
-        output = chain.invoke({"question": question, "web_page_text": text})
+        chain_turbo = turbo_prompt | turbo_model | output_parser
+        processed_data = chain_turbo.invoke(
+            {"question": question, "web_page_text": text})
+
+        chain = gpt4_prompt_template | gpt4_model | output_parser
+        output = chain.invoke(
+            {"question": question, "processed_text": processed_data})
         return output
     except KeyError as err:
         print(err)
