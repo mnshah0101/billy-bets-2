@@ -6,5 +6,9 @@
   "routes": [
     { "src": "/(.*)", "dest": "/app.py" }
   ],
-  "functions": { "app.py": { "runtime": "python3.10" } }
+  "functions": {
+    "api/chat.py": {
+      "maxDuration": 300
+    }
+  }
 }
