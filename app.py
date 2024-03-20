@@ -78,7 +78,7 @@ def chat():
     chat_history = chat_history[:-5]
 
     response = agent.invoke(
-        {"input": question + " Here is the chat history: " + str(chat_history), 'chat_history': []})
+        {"input": "Answer this question about mens college basketball. The current season is 2024. " + question + " Here is the chat history: " + str(chat_history), 'chat_history': []})
 
     client = MongoClient(os.getenv("MONGO_URI"), server_api=ServerApi('1'))
     try:
