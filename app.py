@@ -28,18 +28,18 @@ open_ai_key = os.getenv("OPENAI_API_KEY")
 MONGO_USER = os.getenv("MONGO_USER")
 MONGO_PASS = os.getenv("MONGO_PASSWORD")
 
-application = Flask(__name__)
-cors = CORS(application)
-application.config['CORS_HEADERS'] = 'Content-Type'
+app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 
-@application.route('/')
+@app.route('/')
 @cross_origin()
 def index():
     return "Hi I'm Billy"
 
 
-@application.route('/chat')
+@app.route('/chat')
 @cross_origin()
 def chat():
     print('hit')
@@ -97,4 +97,4 @@ def chat():
 
 
 if __name__ == '__main__':
-    application.run(port=8000, debug=True)
+    app.run(port=8000, debug=True)
