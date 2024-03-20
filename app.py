@@ -89,9 +89,12 @@ def chat():
     db = client['billybets']
     collection = db['results']
 
-    doc = {'question': question, 'answer': response, 'time': time.time() - start}
-
-    collection.insert_one(doc)
+    try:
+        doc = {'question': question,
+               'answer': response['output'], 'time': time.time() - start}
+        collection.insert_one(doc)
+    except Exception as e:
+        print(e)
 
     return jsonify({"response": response, "time": time.time() - start})
 
