@@ -105,7 +105,7 @@ def get_answer(question, text):
 
     gpt4_prompt_template = ChatPromptTemplate.from_template(
         "Answer this question as an expert sports AI model interacting with a user: {question} using the essential information processed from the web page. If you cannot answer the question, output 'NOT_ENOUGH_INFORMATION_ERROR' word for word. Processed web page text: {processed_text}")
-    gpt4_model = ChatOpenAI(model="gpt-4-0125-preview",
+    gpt4_model = ChatOpenAI(model="gpt-3.5-turbo",
                             api_key=os.getenv('OPENAI_API_KEY'))
 
     output_parser = StrOutputParser()
