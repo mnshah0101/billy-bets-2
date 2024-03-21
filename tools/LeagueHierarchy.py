@@ -46,7 +46,7 @@ class LeagueHierarchy(BaseTool):
             openai_api_key=open_ai_key
         )
         question_agent = question + \
-            " The DataFrame given is a DataFrame of college basketball conferences with the league standings of every single conference."
+            " The DataFrame given is a DataFrame of college basketball conferences with the league standings of every single conference. Use your prior knowledge of college basketball to ask the agent about the standings of a specific conference or team."
         response = df_agent.run(question_agent)
 
         return response

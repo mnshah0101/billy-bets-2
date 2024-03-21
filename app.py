@@ -14,10 +14,10 @@ from tools.Schedule import Schedule
 from tools.TeamStatistics import TeamStatistics
 from langchain import hub
 from langchain.agents import initialize_agent
+from flask_cors import CORS, cross_origin
 
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
-
 
 
 import dotenv
@@ -29,12 +29,28 @@ MONGO_USER = os.getenv("MONGO_USER")
 MONGO_PASS = os.getenv("MONGO_PASSWORD")
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
+
+
+@app.route('/')
+@cross_origin()
+def index():
+    return "Hi I'm Billy"
 
 
 @app.route('/chat')
+@cross_origin()
 def chat():
+    print('hit')
     start = time.time()
     question = request.args.get('question')
+    chat_history = request.args.get('chat_history')
+    if (chat_history == None):
+        chat_history = []
+    print('chat_history')
+    print(chat_history)
+
     TeamTrendsTool = TeamTrends()
     LeagueHierarchyTool = LeagueHierarchy()
     InternetTool = InternetModel()
@@ -43,13 +59,14 @@ def chat():
     BettingTrendsByMatchupTool = BettingTrendsByMatchup()
     ScheduleTool = Schedule()
     TeamStatisticsTool = TeamStatistics()
+    SeasonalBettingTool = SeasonalBettingStats()
     llm = ChatOpenAI(
         temperature=0,
         model_name='gpt-4',
         openai_api_key=open_ai_key)
-    tools = [LeagueHierarchyTool, TeamTrendsTool,
-             PlayerSeasonStatsTool, PlayerGameStatsTool, InternetTool, 
-             BettingTrendsByMatchupTool, ScheduleTool, TeamStatisticsTool]
+    tools = [ScheduleTool, LeagueHierarchyTool, TeamTrendsTool,
+             PlayerGameStatsTool,
+             BettingTrendsByMatchupTool, PlayerSeasonStatsTool, TeamStatisticsTool, InternetTool, SeasonalBettingTool]
 
     agent = initialize_agent(
         agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
@@ -59,8 +76,26 @@ def chat():
         max_iterations=3,
         early_stopping_method='generate'
     )
+    chat_history = chat_history[:-5]
 
-    response = agent.invoke({"input": question, 'chat_history': []})
+    response = agent.invoke(
+        {"input": "Answer this question about mens college basketball. The current season is 2024. " + question + " Here is the chat history: " + str(chat_history), 'chat_history': []})
+
+    client = MongoClient(os.getenv("MONGO_URI"), server_api=ServerApi('1'))
+    try:
+        client.admin.command('ping')
+        print("Pinged your deployment. You successfully connected to MongoDB!")
+    except Exception as e:
+        print(e)
+    db = client['billybets']
+    collection = db['results']
+
+    try:
+        doc = {'question': question,
+               'answer': response['output'], 'time': time.time() - start}
+        collection.insert_one(doc)
+    except Exception as e:
+        print(e)
 
     uri = "mongodb+srv://{MONGO_USER}:{MONGO_PASS}@alpha.nwl3wmb.mongodb.net/?retryWrites=true&w=majority&appName=Alpha"
     client = MongoClient(uri, server_api=ServerApi('1'))
