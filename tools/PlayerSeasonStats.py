@@ -31,6 +31,10 @@ class PlayerSeasonStats(BaseTool):
         # get the abbreviated
         season = param_string.split("season: ")[1].split()[0]
         question = param_string.split("question:")[1]
+        statistic = param_string.split("statistic: ")[1].split()[0]
+        player_name = param_string.split("player_name: ")[1].split()[0]
+        total_or_average = param_string.split("total_or_average: ")[1].split()[0]
+
 
         URL = f"https://api.sportsdata.io/v3/cbb/stats/json/PlayerSeasonStats/{season}"
         data = requests.get(
@@ -38,7 +42,7 @@ class PlayerSeasonStats(BaseTool):
         df = pd.DataFrame(data.json())
         print(df)
         df_agent = create_pandas_dataframe_agent(
-            ChatOpenAI(temperature=0, model="gpt-3.5-turbo-0613",
+            ChatOpenAI(temperature=0, model="gpt-4",
                        openai_api_key=open_ai_key),
             df,
             verbose=True,
@@ -47,6 +51,12 @@ class PlayerSeasonStats(BaseTool):
         )
         question_agent = question + \
             " The dataframe given is a dataframe of a players stats within a given season."
+
+        player_stats = df[df['Name'] == 'Name']['Stat'].sum()
+        number_of_games = df[df['Name'] == 'Name']['Games'].sum()
+        statistical_average = player_stats / number_of_games
+        
+
 
         response = df_agent.run(question_agent)
 

@@ -14,7 +14,7 @@ import difflib
 
 load_dotenv()
 open_ai_key = os.getenv("OPENAI_API_KEY")
-sports_data_key = "66b9a43385ed4dc981818ad925d0efb9"
+sports_data_key = os.getenv("SPORTS_DATA_IO_API_KEY")
 
 team_ids = {}
 with open('./jsons/team_abbr.json') as f:
