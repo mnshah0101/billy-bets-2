@@ -1,15 +1,25 @@
+from dotenv import load_dotenv
 import json
 from langchain_experimental.agents.agent_toolkits import create_pandas_dataframe_agent
 import pandas as pd
 from langchain.tools import BaseTool
 from langchain.pydantic_v1 import BaseModel, Field
-from langchain.chat_models import ChatOpenAI
+from langchain_community.chat_models import ChatOpenAI
 import requests
 from typing import Type
 import dotenv
 import os
-from langchain.agents import AgentType
+from bs4 import BeautifulSoup
+import requests
 import re
+from langchain_core.output_parsers import StrOutputParser
+from langchain_core.prompts import ChatPromptTemplate
+from langchain_openai import ChatOpenAI
+import time
+import os
+from langchain.tools import Tool
+from langchain_community.utilities import GoogleSearchAPIWrapper
+from langchain.agents import AgentType
 
 
 dotenv.load_dotenv()
@@ -26,7 +36,7 @@ class SeasonalBettingInput(BaseModel):
         description="""A formatted string of the original question and season, for example: 'question: What tournament team has the best record against the spread this season? : season: 2024""")
 
 
-class SeasonalBetting(BaseTool):
+class SeasonalBettingStats(BaseTool):
     name = "Seasonal Betting Stats"
     description = """Returns the full list of BetttingEvents for the given season. Intended for those who need to tie BettingEventIDs to GameIDs. Relevant for Futures Feeds and Props Feeds. For example: 'question:  What tournament team has the best record against the spread this season?: season: 2024'"""
     args_schema: Type[BaseModel] = SeasonalBettingInput
@@ -37,6 +47,9 @@ class SeasonalBetting(BaseTool):
         # get the abbreviated
         season = param_string.split("season: ")[1].split()[0]
         question = param_string.split("question:")[1]
+
+        print(season)
+        print(question)
                
       
         URL = f"https://api.sportsdata.io/v3/cbb/odds/json/BettingEvents/{season}"

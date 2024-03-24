@@ -12,6 +12,8 @@ from tools.PlayerGameStats import PlayerGameStats
 from tools.BettingTrendsByMatchup import BettingTrendsByMatchup
 from tools.Schedule import Schedule
 from tools.TeamStatistics import TeamStatistics
+from tools.SeasonalBettingStats import SeasonalBettingStats
+from tools.OverUnderIn import OverUnderInStats
 from langchain import hub
 from langchain.agents import initialize_agent
 from flask_cors import CORS, cross_origin
@@ -60,13 +62,15 @@ def chat():
     ScheduleTool = Schedule()
     TeamStatisticsTool = TeamStatistics()
     SeasonalBettingTool = SeasonalBettingStats()
+    OverUnderInGameTool = OverUnderInStats()
+    
     llm = ChatOpenAI(
         temperature=0,
         model_name='gpt-4',
         openai_api_key=open_ai_key)
     tools = [ScheduleTool, LeagueHierarchyTool, TeamTrendsTool,
              PlayerGameStatsTool,
-             BettingTrendsByMatchupTool, PlayerSeasonStatsTool, TeamStatisticsTool, InternetTool, SeasonalBettingTool]
+             BettingTrendsByMatchupTool, PlayerSeasonStatsTool, TeamStatisticsTool, InternetTool, SeasonalBettingTool, OverUnderInGameTool]
 
     agent = initialize_agent(
         agent=AgentType.ZERO_SHOT_REACT_DESCRIPTION,
